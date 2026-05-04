@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AuthListener from "@/components/auth/AuthListener";
 
 export const metadata: Metadata = {
   title: "PiezaLink — Marketplace de Repuestos Automotrices",
@@ -14,7 +15,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className="min-h-screen bg-slate-50">{children}</body>
+      <body className="min-h-screen bg-slate-50">
+        <AuthListener />
+        {children}
+      </body>
     </html>
   );
 }
