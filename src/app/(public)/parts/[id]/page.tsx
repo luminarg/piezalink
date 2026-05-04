@@ -5,6 +5,36 @@ import Link from "next/link";
 import { buildWhatsAppLink } from "@/lib/utils/whatsapp";
 import WhatsAppButton from "@/components/parts/WhatsAppButton";
 import type { Part } from "@/types";
+import type { Metadata } from "next";
+
+export async function generateMetadata({ params }: PartPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: part } = await supabase
+    .from("parts")
+    .select("part_number, description, compatibility, brand, vendor:vendors(company_name, city)")
+    .eq("id", id)
+    .single();
+
+  if (!part) return { title: "Pieza no encontrada — PiezaLink" };
+
+  const title = `${part.part_number} — ${part.description} | PiezaLink`;
+  const description = `Repuesto ${part.part_number}: ${part.description}. Compatible con ${part.compatibility}. ${part.vendor?.company_name ? `Vendido por ${part.vendor.company_name}` : ""}. Contactá al vendedor por WhatsApp.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      siteName: "PiezaLink",
+    },
+    alternates: {
+      canonical: `/parts/${id}`,
+    },
+  };
+}
 
 interface PartPageProps {
   params: Promise<{ id: string }>;

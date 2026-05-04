@@ -1,12 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
-import { CheckCircle, XCircle, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
+import VendorActions from "@/components/admin/VendorActions";
 
 export default async function AdminVendorsPage() {
   const supabase = await createClient();
 
   const { data: vendors } = await supabase
     .from("vendors")
-    .select("*, subscriptions(plan, status, expires_at)")
+    .select("*, subscriptions(id, plan, status, expires_at)")
     .order("created_at", { ascending: false });
 
   return (
@@ -23,25 +24,26 @@ export default async function AdminVendorsPage() {
               <th className="px-4 py-3 text-left">Negocio</th>
               <th className="px-4 py-3 text-left">Contacto</th>
               <th className="px-4 py-3 text-left">Plan</th>
-              <th className="px-4 py-3 text-left">Estado</th>
-              <th className="px-4 py-3 text-left">Registro</th>
+              <th className="px-4 py-3 text-left">Vence</th>
+              <th className="px-4 py-3 text-center">Activo</th>
+              <th className="px-4 py-3 text-center">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {vendors?.map((v) => {
               const sub = Array.isArray(v.subscriptions) ? v.subscriptions[0] : v.subscriptions;
               return (
-                <tr key={v.id} className="hover:bg-slate-50">
+                <tr key={v.id} className={`hover:bg-slate-50 ${!v.is_active ? "opacity-50" : ""}`}>
                   <td className="px-4 py-3">
                     <p className="font-medium text-slate-900">{v.company_name}</p>
                     <p className="text-xs text-slate-400">{v.city}</p>
                   </td>
                   <td className="px-4 py-3 text-slate-600">
-                    <p>{v.email}</p>
+                    <p className="text-xs">{v.email}</p>
                     <p className="text-xs text-slate-400">{v.whatsapp}</p>
                   </td>
                   <td className="px-4 py-3">
-                    {sub && (
+                    {sub ? (
                       <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                         sub.plan === "pro" ? "bg-blue-100 text-blue-700" :
                         sub.plan === "basic" ? "bg-slate-100 text-slate-600" :
@@ -49,24 +51,31 @@ export default async function AdminVendorsPage() {
                       }`}>
                         {sub.plan}
                       </span>
-                    )}
+                    ) : <span className="text-xs text-slate-300">—</span>}
                   </td>
-                  <td className="px-4 py-3">
-                    {v.is_active ? (
-                      <span className="flex items-center gap-1 text-emerald-600 text-xs">
-                        <CheckCircle size={12} /> Activo
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-red-500 text-xs">
-                        <XCircle size={12} /> Inactivo
-                      </span>
-                    )}
+                  <td className="px-4 py-3 text-xs text-slate-400">
+                    {sub?.expires_at ? (
+                      <div className="flex items-center gap-1">
+                        <Calendar size={11} />
+                        {new Date(sub.expires_at).toLocaleDateString("es-AR")}
+                      </div>
+                    ) : "—"}
                   </td>
-                  <td className="px-4 py-3 text-slate-400 text-xs">
-                    <div className="flex items-center gap-1">
-                      <Calendar size={11} />
-                      {new Date(v.created_at).toLocaleDateString("es-AR")}
-                    </div>
+                  <td className="px-4 py-3 text-center">
+                    <VendorActions
+                      vendorId={v.id}
+                      isActive={v.is_active}
+                      subscriptionId={sub?.id}
+                      currentPlan={sub?.plan ?? "trial"}
+                    />
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <a
+                      href={`mailto:${v.email}`}
+                      className="text-xs text-blue-600 hover:underline"
+                    >
+                      Contactar
+                    </a>
                   </td>
                 </tr>
               );

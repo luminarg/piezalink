@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Search, Zap, Package, BarChart2 } from "lucide-react";
+import AdBanner from "@/components/ui/AdBanner";
 
 export default function HomePage() {
   return (
@@ -41,6 +42,11 @@ export default function HomePage() {
             Búsqueda por número de parte, descripción o compatibilidad
           </p>
         </div>
+      </section>
+
+      {/* Banner home_top */}
+      <section className="max-w-7xl mx-auto px-4 pt-6">
+        <AdBanner position="home_top" />
       </section>
 
       {/* Features */}
