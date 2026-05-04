@@ -1,0 +1,142 @@
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { Plus, FileUp, Package, Eye, Pencil, ToggleLeft } from "lucide-react";
+import PartToggle from "@/components/dashboard/PartToggle";
+
+export default async function PartsPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: vendor } = await supabase
+    .from("vendors")
+    .select("id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!vendor) redirect("/register");
+
+  const { data: parts } = await supabase
+    .from("parts")
+    .select("*")
+    .eq("vendor_id", vendor.id)
+    .order("created_at", { ascending: false });
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Mis piezas</h1>
+          <p className="text-slate-500 text-sm mt-1">
+            {parts?.length ?? 0} pieza{parts?.length !== 1 ? "s" : ""} publicada{parts?.length !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Link
+            href="/dashboard/parts/import"
+            className="flex items-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            <FileUp size={15} />
+            Importar Excel
+          </Link>
+          <Link
+            href="/dashboard/parts/new"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            <Plus size={15} />
+            Agregar pieza
+          </Link>
+        </div>
+      </div>
+
+      {(!parts || parts.length === 0) && (
+        <div className="text-center py-20 border-2 border-dashed border-slate-200 rounded-xl">
+          <Package size={36} className="mx-auto text-slate-300 mb-3" />
+          <p className="font-medium text-slate-600 mb-1">Todavía no tenés piezas publicadas</p>
+          <p className="text-sm text-slate-400 mb-6">Podés agregar piezas una por una o importar tu catálogo desde Excel</p>
+          <div className="flex justify-center gap-3">
+            <Link
+              href="/dashboard/parts/import"
+              className="flex items-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+            >
+              <FileUp size={15} />
+              Importar Excel
+            </Link>
+            <Link
+              href="/dashboard/parts/new"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+            >
+              <Plus size={15} />
+              Agregar pieza
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {parts && parts.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
+              <tr>
+                <th className="px-4 py-3 text-left">Nro. Pieza</th>
+                <th className="px-4 py-3 text-left">Descripción</th>
+                <th className="px-4 py-3 text-left">Compatibilidad</th>
+                <th className="px-4 py-3 text-right">Stock</th>
+                <th className="px-4 py-3 text-left">Marca</th>
+                <th className="px-4 py-3 text-center">Estado</th>
+                <th className="px-4 py-3 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {parts.map((part) => (
+                <tr key={part.id} className={`hover:bg-slate-50 ${!part.is_active ? "opacity-50" : ""}`}>
+                  <td className="px-4 py-3 font-mono text-xs font-semibold text-slate-700">
+                    {part.part_number}
+                  </td>
+                  <td className="px-4 py-3 text-slate-700 max-w-xs">
+                    <p className="truncate">{part.description}</p>
+                    {part.category && (
+                      <span className="text-xs text-slate-400">{part.category}</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-slate-500 max-w-xs truncate text-xs">
+                    {part.compatibility}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <span className={`font-semibold ${part.stock_quantity === 0 ? "text-red-500" : "text-slate-800"}`}>
+                      {part.stock_quantity}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-slate-500">{part.brand || "-"}</td>
+                  <td className="px-4 py-3 text-center">
+                    <PartToggle partId={part.id} isActive={part.is_active} />
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <Link
+                        href={`/parts/${part.id}`}
+                        target="_blank"
+                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        title="Ver en el sitio"
+                      >
+                        <Eye size={14} />
+                      </Link>
+                      <Link
+                        href={`/dashboard/parts/${part.id}/edit`}
+                        className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors"
+                        title="Editar"
+                      >
+                        <Pencil size={14} />
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
