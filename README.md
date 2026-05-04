@@ -14,7 +14,7 @@ Marketplace B2B/B2C de repuestos automotrices. Conecta compradores con vendedore
 ### 1. Clonar e instalar dependencias
 
 ```bash
-git clone https://github.com/TU_USUARIO/piezalink.git
+git clone https://github.com/luminarg/piezalink.git
 cd piezalink
 npm install
 ```
@@ -45,25 +45,7 @@ npm run dev
 
 Abrí [http://localhost:3000](http://localhost:3000)
 
-## Estructura
-
-```
-src/
-├── app/
-│   ├── (public)/        # Home, búsqueda, detalle de pieza
-│   ├── (auth)/          # Login, registro
-│   ├── (dashboard)/     # Panel del vendedor
-│   ├── (admin)/         # Panel admin
-│   └── api/             # Endpoints (import, metrics)
-├── components/
-├── lib/supabase/        # Clientes server/client
-├── lib/utils/           # WhatsApp link builder, cn()
-└── types/               # Tipos TypeScript
-```
-
 ## Importación de stock (Excel)
-
-El archivo debe tener estas columnas:
 
 | Columna | Requerida |
 |---------|-----------|
