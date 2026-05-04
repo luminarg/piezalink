@@ -20,14 +20,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Sin datos" }, { status: 400 });
   }
 
-  const toInsert = rows.map((row: {
+  type InputRow = {
     part_number: string;
     description: string;
     compatibility: string;
     stock_quantity: number;
     brand?: string;
     category?: string;
-  }) => ({
+  };
+
+  // Deduplicar por part_number (quedar con la última ocurrencia)
+  const deduped = Object.values(
+    (rows as InputRow[]).reduce((acc, row) => {
+      acc[row.part_number.trim().toLowerCase()] = row;
+      return acc;
+    }, {} as Record<string, InputRow>)
+  );
+
+  const toInsert = deduped.map((row) => ({
     vendor_id: vendor.id,
     part_number: row.part_number,
     description: row.description,
