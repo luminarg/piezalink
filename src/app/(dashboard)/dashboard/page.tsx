@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Eye, MessageCircle, Package, TrendingUp } from "lucide-react";
+import SubscriptionBanner from "@/components/dashboard/SubscriptionBanner";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -16,6 +17,14 @@ export default async function DashboardPage() {
   if (!vendor) redirect("/register");
 
   const vendorId = vendor.id;
+
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("plan, status, expires_at")
+    .eq("vendor_id", vendorId)
+    .order("expires_at", { ascending: false })
+    .limit(1)
+    .single();
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
   // Métricas en paralelo
@@ -70,6 +79,14 @@ export default async function DashboardPage() {
 
   return (
     <div>
+      {subscription && (
+        <SubscriptionBanner
+          plan={subscription.plan}
+          status={subscription.status}
+          expiresAt={subscription.expires_at}
+        />
+      )}
+
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">Resumen</h1>
         <p className="text-slate-500 text-sm mt-1">

@@ -11,7 +11,7 @@ interface Props {
   currentPlan: string;
 }
 
-const PLANS = ["trial", "basic", "pro"];
+const PLANS = ["trial", "basic", "pro", "premium"];
 
 export default function VendorActions({ vendorId, isActive, subscriptionId, currentPlan }: Props) {
   const [active, setActive] = useState(isActive);

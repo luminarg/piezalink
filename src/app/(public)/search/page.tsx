@@ -20,19 +20,35 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   let count = 0;
 
   if (query) {
-    const { data, count: total } = await supabase
-      .from("parts")
-      .select("*, vendor:vendors(id, company_name, whatsapp, city)", { count: "exact" })
-      .eq("is_active", true)
-      .gt("stock_quantity", 0)
-      .or(
-        `part_number.ilike.%${query}%,description.ilike.%${query}%,compatibility.ilike.%${query}%,brand.ilike.%${query}%`
-      )
-      .order("created_at", { ascending: false })
-      .range(offset, offset + perPage - 1);
+    // Solo piezas de vendedores con suscripción activa
+    const now = new Date().toISOString();
+    const { data: activeVendorIds } = await supabase
+      .from("subscriptions")
+      .select("vendor_id")
+      .eq("status", "active")
+      .gt("expires_at", now);
 
-    parts = (data as Part[]) || [];
-    count = total || 0;
+    const vendorIds = (activeVendorIds ?? []).map((s) => s.vendor_id);
+
+    if (vendorIds.length === 0) {
+      parts = [];
+      count = 0;
+    } else {
+      const { data, count: total } = await supabase
+        .from("parts")
+        .select("*, vendor:vendors(id, company_name, whatsapp, city)", { count: "exact" })
+        .eq("is_active", true)
+        .gt("stock_quantity", 0)
+        .in("vendor_id", vendorIds)
+        .or(
+          `part_number.ilike.%${query}%,description.ilike.%${query}%,compatibility.ilike.%${query}%,brand.ilike.%${query}%`
+        )
+        .order("created_at", { ascending: false })
+        .range(offset, offset + perPage - 1);
+
+      parts = (data as Part[]) || [];
+      count = total || 0;
+    }
   }
 
   return (
