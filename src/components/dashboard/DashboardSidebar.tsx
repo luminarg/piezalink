@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, FileUp, MessageSquare, Settings, Wrench, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, FileUp, MessageSquare, Settings, Wrench, LogOut, Bell } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/cn";
@@ -11,7 +11,8 @@ const navItems = [
   { href: "/dashboard", label: "Resumen", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/parts", label: "Mis piezas", icon: Package },
   { href: "/dashboard/parts/import", label: "Importar Excel", icon: FileUp },
-  { href: "/dashboard/contacts", label: "Consultas", icon: MessageSquare },
+  { href: "/dashboard/solicitudes", label: "Solicitudes", icon: Bell },
+  { href: "/dashboard/contacts", label: "Consultas WA", icon: MessageSquare },
   { href: "/dashboard/settings", label: "Mi perfil", icon: Settings },
 ];
 

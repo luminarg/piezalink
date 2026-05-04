@@ -23,6 +23,12 @@ export default function Navbar() {
               Buscar piezas
             </Link>
             <Link
+              href="/busco-pieza"
+              className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
+            >
+              Busco una pieza
+            </Link>
+            <Link
               href="/planes"
               className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
             >
