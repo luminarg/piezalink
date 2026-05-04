@@ -25,33 +25,32 @@ export default function RegisterForm() {
     setLoading(true);
     setError("");
 
-    const supabase = createClient();
-
-    // 1. Crear usuario
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
+    // 1. Crear usuario + vendor via API (usa service role, bypasea RLS)
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
     });
 
-    if (authError || !authData.user) {
-      setError(authError?.message || "Error al crear la cuenta");
+    const data = await res.json();
+
+    if (!res.ok) {
+      setError(data.error || "Error al crear la cuenta");
       setLoading(false);
       return;
     }
 
-    // 2. Crear perfil de vendedor
-    const { error: vendorError } = await supabase.from("vendors").insert({
-      user_id: authData.user.id,
-      company_name: form.company_name,
-      whatsapp: form.whatsapp,
-      phone: form.phone,
+    // 2. Login automático después del registro
+    const supabase = createClient();
+    const { error: loginError } = await supabase.auth.signInWithPassword({
       email: form.email,
-      city: form.city,
+      password: form.password,
     });
 
-    if (vendorError) {
-      setError("Error al crear el perfil. Intentá nuevamente.");
+    if (loginError) {
+      setError("Cuenta creada. Ingresá con tu email y contraseña.");
       setLoading(false);
+      router.push("/login");
       return;
     }
 
