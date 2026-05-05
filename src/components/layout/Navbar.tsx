@@ -35,6 +35,12 @@ export default function Navbar() {
               Planes
             </Link>
             <Link
+              href="/nosotros"
+              className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
+            >
+              Nosotros
+            </Link>
+            <Link
               href="/login"
               className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
             >

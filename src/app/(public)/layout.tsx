@@ -31,6 +31,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               <Link href="/planes" className="hover:text-slate-800 transition-colors">
                 Planes
               </Link>
+              <Link href="/nosotros" className="hover:text-slate-800 transition-colors">
+                Nosotros
+              </Link>
             </div>
 
             {/* Redes */}
