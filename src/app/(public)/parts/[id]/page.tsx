@@ -4,6 +4,7 @@ import { MessageCircle, ArrowLeft, Package, MapPin, Phone, Mail } from "lucide-r
 import Link from "next/link";
 import { buildWhatsAppLink } from "@/lib/utils/whatsapp";
 import WhatsAppButton from "@/components/parts/WhatsAppButton";
+import { ProductSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
 import type { Part } from "@/types";
 import type { Metadata } from "next";
 
@@ -66,8 +67,24 @@ export default async function PartPage({ params }: PartPageProps) {
     ? buildWhatsAppLink(vendor.whatsapp, part.part_number)
     : null;
 
+  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://piezalink.com";
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
+      <ProductSchema
+        partId={part.id}
+        partNumber={part.part_number}
+        description={part.description}
+        compatibility={part.compatibility}
+        vendorName={vendor?.company_name}
+      />
+      <BreadcrumbSchema
+        items={[
+          { name: "Inicio", url: BASE_URL },
+          { name: "Buscar piezas", url: `${BASE_URL}/search` },
+          { name: part.part_number, url: `${BASE_URL}/parts/${part.id}` },
+        ]}
+      />
       <Link
         href="/search"
         className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-6 transition-colors"

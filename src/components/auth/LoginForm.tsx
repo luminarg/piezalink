@@ -17,7 +17,7 @@ export default function LoginForm() {
     setError("");
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setError("Email o contraseña incorrectos");
@@ -25,7 +25,11 @@ export default function LoginForm() {
       return;
     }
 
-    router.push("/dashboard");
+    const isAdmin =
+      data.user?.user_metadata?.role === "admin" ||
+      data.user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+
+    router.push(isAdmin ? "/admin" : "/dashboard");
     router.refresh();
   };
 

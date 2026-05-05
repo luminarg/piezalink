@@ -49,9 +49,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Si ya está logueado y va a login/register, redirigir al dashboard
+  // Si ya está logueado y va a login/register, redirigir según rol
   if (user && (pathname === "/login" || pathname === "/register")) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    const isAdmin =
+      user.user_metadata?.role === "admin" ||
+      user.email === process.env.ADMIN_EMAIL;
+    return NextResponse.redirect(new URL(isAdmin ? "/admin" : "/dashboard", request.url));
   }
 
   return supabaseResponse;

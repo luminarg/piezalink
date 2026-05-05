@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import type { MetadataRoute } from "next";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://piezalink.vercel.app";
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://piezalink.com";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = await createClient();
@@ -10,7 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .from("parts")
     .select("id, updated_at")
     .eq("is_active", true)
-    .limit(5000);
+    .limit(10000);
 
   const partEntries: MetadataRoute.Sitemap = (parts ?? []).map((p) => ({
     url: `${BASE_URL}/parts/${p.id}`,
@@ -20,9 +20,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   return [
-    { url: BASE_URL, lastModified: new Date(), changeFrequency: "daily", priority: 1 },
-    { url: `${BASE_URL}/search`, lastModified: new Date(), changeFrequency: "daily", priority: 0.9 },
-    { url: `${BASE_URL}/register`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
+    {
+      url: BASE_URL,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 1.0,
+    },
+    {
+      url: `${BASE_URL}/search`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
+      url: `${BASE_URL}/busco-pieza`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/planes`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: `${BASE_URL}/register`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
     ...partEntries,
   ];
 }

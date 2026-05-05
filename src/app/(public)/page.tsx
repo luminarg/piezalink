@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { Search, Zap, Package, BarChart2 } from "lucide-react";
 import AdBanner from "@/components/ui/AdBanner";
+import { OrganizationSchema, WebSiteSchema } from "@/components/seo/JsonLd";
 
 export default function HomePage() {
   return (
     <div>
+      <OrganizationSchema />
+      <WebSiteSchema />
       {/* Hero */}
       <section className="bg-white border-b border-slate-200">
         <div className="max-w-4xl mx-auto px-4 py-20 text-center">
