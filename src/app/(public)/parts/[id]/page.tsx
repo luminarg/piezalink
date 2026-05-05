@@ -18,8 +18,9 @@ export async function generateMetadata({ params }: PartPageProps): Promise<Metad
 
   if (!part) return { title: "Pieza no encontrada — PiezaLink" };
 
+  const vendorMeta = Array.isArray(part.vendor) ? part.vendor[0] : part.vendor;
   const title = `${part.part_number} — ${part.description} | PiezaLink`;
-  const description = `Repuesto ${part.part_number}: ${part.description}. Compatible con ${part.compatibility}. ${part.vendor?.company_name ? `Vendido por ${part.vendor.company_name}` : ""}. Contactá al vendedor por WhatsApp.`;
+  const description = `Repuesto ${part.part_number}: ${part.description}. Compatible con ${part.compatibility}. ${vendorMeta?.company_name ? `Vendido por ${vendorMeta.company_name}` : ""}. Contactá al vendedor por WhatsApp.`;
 
   return {
     title,
@@ -60,8 +61,9 @@ export default async function PartPage({ params }: PartPageProps) {
     event_type: "view",
   });
 
-  const whatsappUrl = part.vendor?.whatsapp
-    ? buildWhatsAppLink(part.vendor.whatsapp, part.part_number)
+  const vendor = Array.isArray(part.vendor) ? part.vendor[0] : part.vendor;
+  const whatsappUrl = vendor?.whatsapp
+    ? buildWhatsAppLink(vendor.whatsapp, part.part_number)
     : null;
 
   return (
@@ -131,32 +133,32 @@ export default async function PartPage({ params }: PartPageProps) {
           )}
 
           {/* Vendor info */}
-          {part.vendor && (
+          {vendor && (
             <div className="bg-white rounded-xl border border-slate-200 p-5">
               <h3 className="font-semibold text-slate-900 mb-3">
-                {part.vendor.company_name}
+                {vendor.company_name}
               </h3>
-              {part.vendor.description && (
-                <p className="text-xs text-slate-500 mb-3">{part.vendor.description}</p>
+              {vendor.description && (
+                <p className="text-xs text-slate-500 mb-3">{vendor.description}</p>
               )}
               <div className="space-y-2 text-sm text-slate-500">
-                {part.vendor.city && (
+                {vendor.city && (
                   <div className="flex items-center gap-2">
                     <MapPin size={13} />
-                    {part.vendor.city}
-                    {part.vendor.state && `, ${part.vendor.state}`}
+                    {vendor.city}
+                    {vendor.state && `, ${vendor.state}`}
                   </div>
                 )}
-                {part.vendor.phone && (
+                {vendor.phone && (
                   <div className="flex items-center gap-2">
                     <Phone size={13} />
-                    {part.vendor.phone}
+                    {vendor.phone}
                   </div>
                 )}
-                {part.vendor.email && (
+                {vendor.email && (
                   <div className="flex items-center gap-2">
                     <Mail size={13} />
-                    {part.vendor.email}
+                    {vendor.email}
                   </div>
                 )}
               </div>

@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Megaphone, MessageSquare, Wrench, Shield } from "lucide-react";
+import { LayoutDashboard, Users, Megaphone, MessageSquare, Wrench, Shield, UserCog } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
 const navItems = [
   { href: "/admin", label: "Resumen global", icon: LayoutDashboard, exact: true },
-  { href: "/admin/vendors", label: "Vendedores", icon: Users },
+  { href: "/admin/usuarios", label: "Usuarios", icon: UserCog },
+  { href: "/admin/vendors", label: "Vendedores (legacy)", icon: Users },
   { href: "/admin/ads", label: "Publicidad", icon: Megaphone },
   { href: "/admin/contacts", label: "Consultas", icon: MessageSquare },
 ];
