@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { MessageCircle, Lock, Phone, Mail, Car } from "lucide-react";
 import Link from "next/link";
 import { buildWhatsAppLink } from "@/lib/utils/whatsapp";
+import AiMatchButton from "@/components/dashboard/AiMatchButton";
 
 export default async function SolicitudesPage() {
   const supabase = await createClient();
@@ -150,6 +151,11 @@ export default async function SolicitudesPage() {
                   </p>
                 )}
                 <p className="text-sm text-slate-700">{req.description}</p>
+              </div>
+
+              {/* Botón IA matching */}
+              <div className="mb-4">
+                <AiMatchButton requestId={req.id} vendorId={vendor.id} />
               </div>
 
               <div className="flex items-center justify-between">
