@@ -1,3 +1,4 @@
+import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Check, Zap } from "lucide-react";
 import type { Metadata } from "next";
@@ -7,64 +8,15 @@ export const metadata: Metadata = {
   description: "Publicá tu catálogo de repuestos en PiezaLink. 6 meses gratis, sin tarjeta de crédito.",
 };
 
-const plans = [
-  {
-    name: "Básico",
-    price: "A definir",
-    description: "Para negocios que están comenzando",
-    color: "border-slate-200",
-    badge: "",
-    features: [
-      "Hasta 300 piezas publicadas",
-      "Contacto por WhatsApp",
-      "Dashboard con métricas básicas",
-      "Importación desde Excel",
-      "Soporte por email",
-    ],
-    cta: "Elegir Básico",
-    href: "/register",
-    highlight: false,
-  },
-  {
-    name: "Pro",
-    price: "A definir",
-    description: "Para negocios en crecimiento",
-    color: "border-blue-500",
-    badge: "Más popular",
-    features: [
-      "Hasta 1.000 piezas publicadas",
-      "Contacto por WhatsApp",
-      "Destacado en resultados de búsqueda",
-      "Dashboard con métricas avanzadas",
-      "Importación desde Excel",
-      "Soporte prioritario",
-    ],
-    cta: "Elegir Pro",
-    href: "/register",
-    highlight: true,
-  },
-  {
-    name: "Premium",
-    price: "A definir",
-    description: "Para grandes distribuidores",
-    color: "border-slate-200",
-    badge: "",
-    features: [
-      "Piezas ilimitadas",
-      "Contacto por WhatsApp",
-      "Posición destacada en búsquedas",
-      "Banner publicitario incluido",
-      "Dashboard completo + exportación",
-      "Importación desde Excel y ERP",
-      "Soporte dedicado",
-    ],
-    cta: "Elegir Premium",
-    href: "/register",
-    highlight: false,
-  },
-];
+export default async function PlanesPage() {
+  const supabase = await createClient();
 
-export default function PlanesPage() {
+  const { data: plans } = await supabase
+    .from("plans")
+    .select("*")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-16">
       {/* Header */}
@@ -95,49 +47,58 @@ export default function PlanesPage() {
 
       {/* Plans */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {plans.map((plan) => (
-          <div
-            key={plan.name}
-            className={`relative bg-white rounded-2xl border-2 p-6 flex flex-col ${plan.color} ${
-              plan.highlight ? "shadow-lg shadow-blue-100" : ""
-            }`}
-          >
-            {plan.badge && (
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                {plan.badge}
-              </span>
-            )}
+        {(plans ?? []).map((plan) => {
+          const features = Array.isArray(plan.features) ? plan.features : [];
+          const borderColor =
+            plan.slug === "pro"
+              ? "border-blue-500"
+              : plan.slug === "premium"
+              ? "border-purple-400"
+              : "border-slate-200";
 
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-slate-900 mb-1">{plan.name}</h2>
-              <p className="text-sm text-slate-500 mb-3">{plan.description}</p>
-              <p className="text-2xl font-bold text-slate-700">{plan.price}</p>
-            </div>
-
-            <ul className="space-y-2.5 flex-1 mb-6">
-              {plan.features.map((feature) => (
-                <li key={feature} className="flex items-start gap-2 text-sm text-slate-600">
-                  <Check size={15} className="text-emerald-500 mt-0.5 shrink-0" />
-                  {feature}
-                </li>
-              ))}
-            </ul>
-
-            <Link
-              href={plan.href}
-              className={`w-full text-center py-3 rounded-xl font-semibold transition-colors ${
-                plan.highlight
-                  ? "bg-blue-600 hover:bg-blue-700 text-white"
-                  : "border border-slate-200 hover:bg-slate-50 text-slate-700"
+          return (
+            <div
+              key={plan.id}
+              className={`relative bg-white rounded-2xl border-2 p-6 flex flex-col ${borderColor} ${
+                plan.is_highlighted ? "shadow-lg shadow-blue-100" : ""
               }`}
             >
-              {plan.cta}
-            </Link>
-          </div>
-        ))}
+              {plan.badge && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  {plan.badge}
+                </span>
+              )}
+
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-slate-900 mb-1">{plan.name}</h2>
+                <p className="text-sm text-slate-500 mb-3">{plan.description}</p>
+                <p className="text-2xl font-bold text-slate-700">{plan.price}</p>
+              </div>
+
+              <ul className="space-y-2.5 flex-1 mb-6">
+                {features.map((feature: string, i: number) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                    <Check size={15} className="text-emerald-500 mt-0.5 shrink-0" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+
+              <Link
+                href="/register"
+                className={`w-full text-center py-3 rounded-xl font-semibold transition-colors ${
+                  plan.is_highlighted
+                    ? "bg-blue-600 hover:bg-blue-700 text-white"
+                    : "border border-slate-200 hover:bg-slate-50 text-slate-700"
+                }`}
+              >
+                {plan.cta}
+              </Link>
+            </div>
+          );
+        })}
       </div>
 
-      {/* FAQ */}
       <div className="mt-14 text-center">
         <p className="text-slate-500 text-sm">
           ¿Preguntas?{" "}
