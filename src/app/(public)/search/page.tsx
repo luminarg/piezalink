@@ -26,7 +26,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     // Parsear la búsqueda con IA
     aiParsed = await parseSearchQuery(query);
 
-    // Vendedores activos
+    // Vendedores activos con suscripción vigente
     const now = new Date().toISOString();
     const { data: activeVendorIds } = await supabase
       .from("subscriptions")
@@ -34,7 +34,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       .eq("status", "active")
       .gt("expires_at", now);
 
-    const vendorIds = (activeVendorIds ?? []).map((s) => s.vendor_id);
+    let vendorIds = (activeVendorIds ?? []).map((s) => s.vendor_id);
+
+    // Fallback: si no hay suscripciones activas, mostrar todos los vendedores activos
+    if (vendorIds.length === 0) {
+      const { data: allActiveVendors } = await supabase
+        .from("vendors")
+        .select("id")
+        .eq("is_active", true);
+      vendorIds = (allActiveVendors ?? []).map((v) => v.id);
+    }
 
     if (vendorIds.length > 0) {
       // Construir filtros enriquecidos con IA
