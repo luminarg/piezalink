@@ -17,7 +17,6 @@ export default function PartCard({ part }: PartCardProps) {
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
-      {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div>
           <span className="text-xs font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
@@ -33,7 +32,6 @@ export default function PartCard({ part }: PartCardProps) {
         </div>
       </div>
 
-      {/* Description */}
       <h3 className="font-semibold text-slate-900 mb-1 line-clamp-2 text-sm">
         {part.description}
       </h3>
@@ -41,19 +39,17 @@ export default function PartCard({ part }: PartCardProps) {
         Compatibilidad: {part.compatibility}
       </p>
 
-      {/* Vendor */}
       {part.vendor && (
         <div className="flex items-center gap-1 text-xs text-slate-400 mb-4">
           <MapPin size={11} />
           <span className="font-medium text-slate-600">{part.vendor.company_name}</span>
-          {part.vendor.city && <span>· {part.vendor.city}</span>}
+          {part.vendor.city && <span>{"· " + part.vendor.city}</span>}
         </div>
       )}
 
-      {/* Actions */}
       <div className="flex gap-2">
         <Link
-          href={`/parts/${part.id}`}
+          href={"/parts/" + (part.slug || part.id)}
           className="flex-1 text-center text-sm border border-slate-200 text-slate-700 hover:bg-slate-50 py-2 rounded-lg transition-colors"
         >
           Ver detalle

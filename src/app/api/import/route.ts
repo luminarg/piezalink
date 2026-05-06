@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { generatePartSlug } from "@/lib/utils/slug";
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -29,7 +30,7 @@ export async function POST(req: Request) {
     category?: string;
   };
 
-  // Deduplicar por part_number (quedar con la última ocurrencia)
+  // Deduplicar por part_number (quedar con la ultima ocurrencia)
   const deduped = Object.values(
     (rows as InputRow[]).reduce((acc, row) => {
       acc[row.part_number.trim().toLowerCase()] = row;
@@ -48,14 +49,31 @@ export async function POST(req: Request) {
     is_active: true,
   }));
 
-  // Upsert por part_number + vendor_id
+  // Upsert por part_number + vendor_id, obtener ids para generar slugs
   const { data, error } = await supabase
     .from("parts")
     .upsert(toInsert, { onConflict: "vendor_id,part_number", ignoreDuplicates: false })
-    .select();
+    .select("id, part_number");
 
   if (error) {
     return NextResponse.json({ success: 0, errors: [error.message] }, { status: 500 });
+  }
+
+  // Generar slugs para las piezas que quedaron sin slug
+  if (data && data.length > 0) {
+    const slugUpdates = data.map((p) => ({
+      id: p.id,
+      slug: generatePartSlug(p.part_number, p.id),
+    }));
+
+    // Actualizar slugs en paralelo por lotes
+    for (const upd of slugUpdates) {
+      await supabase
+        .from("parts")
+        .update({ slug: upd.slug })
+        .eq("id", upd.id)
+        .is("slug", null);
+    }
   }
 
   return NextResponse.json({ success: data?.length ?? 0, errors: [] });

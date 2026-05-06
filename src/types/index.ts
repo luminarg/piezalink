@@ -26,6 +26,7 @@ export interface Part {
   stock_quantity: number;
   brand?: string;
   category?: string;
+  slug?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;

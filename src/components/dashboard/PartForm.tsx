@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { generatePartSlug } from "@/lib/utils/slug";
 
 interface PartFormProps {
   initialData?: {
@@ -42,14 +43,20 @@ export default function PartForm({ initialData }: PartFormProps) {
     const supabase = createClient();
 
     if (isEditing) {
+      // Regenerar slug si cambio el part_number
+      const slug = generatePartSlug(form.part_number, initialData.id);
       const { error } = await supabase
         .from("parts")
-        .update({ ...form, brand: form.brand || null, category: form.category || null })
+        .update({
+          ...form,
+          slug,
+          brand: form.brand || null,
+          category: form.category || null,
+        })
         .eq("id", initialData.id);
 
       if (error) { setError(error.message); setSaving(false); return; }
     } else {
-      // Obtener vendor_id del usuario actual
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setError("No autorizado"); setSaving(false); return; }
 
@@ -61,18 +68,31 @@ export default function PartForm({ initialData }: PartFormProps) {
 
       if (!vendor) { setError("Perfil de vendedor no encontrado"); setSaving(false); return; }
 
-      const { error } = await supabase.from("parts").insert({
-        vendor_id: vendor.id,
-        part_number: form.part_number,
-        description: form.description,
-        compatibility: form.compatibility,
-        stock_quantity: Number(form.stock_quantity),
-        brand: form.brand || null,
-        category: form.category || null,
-        is_active: true,
-      });
+      // Insertar primero sin slug para obtener el id generado
+      const { data: inserted, error: insertError } = await supabase
+        .from("parts")
+        .insert({
+          vendor_id: vendor.id,
+          part_number: form.part_number,
+          description: form.description,
+          compatibility: form.compatibility,
+          stock_quantity: Number(form.stock_quantity),
+          brand: form.brand || null,
+          category: form.category || null,
+          is_active: true,
+        })
+        .select("id")
+        .single();
 
-      if (error) { setError(error.message); setSaving(false); return; }
+      if (insertError || !inserted) {
+        setError(insertError?.message || "Error al guardar");
+        setSaving(false);
+        return;
+      }
+
+      // Ahora actualizar con el slug usando el id real
+      const slug = generatePartSlug(form.part_number, inserted.id);
+      await supabase.from("parts").update({ slug }).eq("id", inserted.id);
     }
 
     router.push("/dashboard/parts");
@@ -84,7 +104,7 @@ export default function PartForm({ initialData }: PartFormProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
-            Número de pieza *
+            Numero de pieza *
           </label>
           <input
             required
@@ -106,7 +126,7 @@ export default function PartForm({ initialData }: PartFormProps) {
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-slate-700 mb-1">Descripción *</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Descripcion *</label>
           <input
             required
             value={form.description}
@@ -136,7 +156,7 @@ export default function PartForm({ initialData }: PartFormProps) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Categoría</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Categoria</label>
           <input
             value={form.category}
             onChange={(e) => set("category", e.target.value)}

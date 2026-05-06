@@ -8,12 +8,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const { data: parts } = await supabase
     .from("parts")
-    .select("id, updated_at")
+    .select("id, slug, updated_at")
     .eq("is_active", true)
     .limit(10000);
 
   const partEntries: MetadataRoute.Sitemap = (parts ?? []).map((p) => ({
-    url: `${BASE_URL}/parts/${p.id}`,
+    url: BASE_URL + "/parts/" + (p.slug || p.id),
     lastModified: new Date(p.updated_at),
     changeFrequency: "weekly",
     priority: 0.7,
@@ -27,25 +27,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
-      url: `${BASE_URL}/search`,
+      url: BASE_URL + "/search",
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/busco-pieza`,
+      url: BASE_URL + "/busco-pieza",
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/planes`,
+      url: BASE_URL + "/planes",
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
-      url: `${BASE_URL}/register`,
+      url: BASE_URL + "/register",
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.5,

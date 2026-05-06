@@ -25,7 +25,6 @@ export default async function PartsPage() {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Mis piezas</h1>
@@ -53,7 +52,6 @@ export default async function PartsPage() {
         </div>
       </div>
 
-      {/* Empty state */}
       {(!parts || parts.length === 0) && (
         <div className="text-center py-16 border-2 border-dashed border-slate-200 rounded-xl">
           <Package size={36} className="mx-auto text-slate-300 mb-3" />
@@ -80,7 +78,6 @@ export default async function PartsPage() {
 
       {parts && parts.length > 0 && (
         <>
-          {/* Vista mobile: cards */}
           <div className="space-y-3 sm:hidden">
             {parts.map((part) => (
               <div
@@ -120,7 +117,7 @@ export default async function PartsPage() {
 
                 <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
                   <Link
-                    href={"/parts/" + part.id}
+                    href={"/parts/" + (part.slug || part.id)}
                     target="_blank"
                     className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-blue-600 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-blue-200 transition-colors"
                   >
@@ -139,7 +136,6 @@ export default async function PartsPage() {
             ))}
           </div>
 
-          {/* Vista desktop: tabla */}
           <div className="hidden sm:block bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -181,7 +177,7 @@ export default async function PartsPage() {
                       <td className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <Link
-                            href={"/parts/" + part.id}
+                            href={"/parts/" + (part.slug || part.id)}
                             target="_blank"
                             className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                             title="Ver en el sitio"

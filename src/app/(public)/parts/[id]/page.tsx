@@ -1,59 +1,63 @@
 import { createClient } from "@/lib/supabase/server";
-import { notFound } from "next/navigation";
-import { MessageCircle, ArrowLeft, Package, MapPin, Phone, Mail } from "lucide-react";
+import { notFound, redirect } from "next/navigation";
+import { ArrowLeft, Package, MapPin, Phone, Mail } from "lucide-react";
 import Link from "next/link";
 import { buildWhatsAppLink } from "@/lib/utils/whatsapp";
 import WhatsAppButton from "@/components/parts/WhatsAppButton";
 import { ProductSchema, BreadcrumbSchema } from "@/components/seo/JsonLd";
-import type { Part } from "@/types";
 import type { Metadata } from "next";
 
-export async function generateMetadata({ params }: PartPageProps): Promise<Metadata> {
-  const { id } = await params;
-  const supabase = await createClient();
-  const { data: part } = await supabase
-    .from("parts")
-    .select("part_number, description, compatibility, brand, vendor:vendors(company_name, city)")
-    .eq("id", id)
-    .single();
-
-  if (!part) return { title: "Pieza no encontrada — PiezaLink" };
-
-  const vendorMeta = Array.isArray(part.vendor) ? part.vendor[0] : part.vendor;
-  const title = `${part.part_number} — ${part.description} | PiezaLink`;
-  const description = `Repuesto ${part.part_number}: ${part.description}. Compatible con ${part.compatibility}. ${vendorMeta?.company_name ? `Vendido por ${vendorMeta.company_name}` : ""}. Contactá al vendedor por WhatsApp.`;
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      type: "website",
-      siteName: "PiezaLink",
-    },
-    alternates: {
-      canonical: `/parts/${id}`,
-    },
-  };
-}
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://piezalink.com";
 
 interface PartPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default async function PartPage({ params }: PartPageProps) {
-  const { id } = await params;
+// Detectar si el param parece un UUID (links viejos) o un slug (links nuevos)
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function generateMetadata({ params }: PartPageProps): Promise<Metadata> {
+  const { id: param } = await params;
   const supabase = await createClient();
 
-  const { data: part } = await supabase
+  const isUUID = UUID_RE.test(param);
+  const query = supabase.from("parts").select("part_number, description, compatibility, brand, slug, vendor:vendors(company_name, city)");
+  const { data: part } = await (isUUID ? query.eq("id", param) : query.eq("slug", param)).single();
+
+  if (!part) return { title: "Pieza no encontrada — PiezaLink" };
+
+  const vendorMeta = Array.isArray(part.vendor) ? part.vendor[0] : part.vendor;
+  const title = part.part_number + " — " + part.description + " | PiezaLink";
+  const description = "Repuesto " + part.part_number + ": " + part.description + ". Compatible con " + part.compatibility + ". " + (vendorMeta?.company_name ? "Vendido por " + vendorMeta.company_name : "") + ". Contacta al vendedor por WhatsApp.";
+  const canonical = BASE_URL + "/parts/" + (part.slug || param);
+
+  return {
+    title,
+    description,
+    openGraph: { title, description, type: "website", siteName: "PiezaLink" },
+    alternates: { canonical },
+  };
+}
+
+export default async function PartPage({ params }: PartPageProps) {
+  const { id: param } = await params;
+  const supabase = await createClient();
+
+  const isUUID = UUID_RE.test(param);
+
+  const query = supabase
     .from("parts")
     .select("*, vendor:vendors(id, company_name, whatsapp, phone, email, city, state, description, logo_url)")
-    .eq("id", id)
-    .eq("is_active", true)
-    .single();
+    .eq("is_active", true);
+
+  const { data: part } = await (isUUID ? query.eq("id", param) : query.eq("slug", param)).single();
 
   if (!part) notFound();
+
+  // Si llegaron por UUID (link viejo) y tiene slug, redirigir permanentemente
+  if (isUUID && part.slug) {
+    redirect("/parts/" + part.slug);
+  }
 
   // Registrar vista
   await supabase.from("part_events").insert({
@@ -67,8 +71,6 @@ export default async function PartPage({ params }: PartPageProps) {
     ? buildWhatsAppLink(vendor.whatsapp, part.part_number)
     : null;
 
-  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://piezalink.com";
-
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <ProductSchema
@@ -81,8 +83,8 @@ export default async function PartPage({ params }: PartPageProps) {
       <BreadcrumbSchema
         items={[
           { name: "Inicio", url: BASE_URL },
-          { name: "Buscar piezas", url: `${BASE_URL}/search` },
-          { name: part.part_number, url: `${BASE_URL}/parts/${part.id}` },
+          { name: "Buscar piezas", url: BASE_URL + "/search" },
+          { name: part.part_number, url: BASE_URL + "/parts/" + (part.slug || part.id) },
         ]}
       />
       <Link
@@ -94,7 +96,6 @@ export default async function PartPage({ params }: PartPageProps) {
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main info */}
         <div className="lg:col-span-2 space-y-4">
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             <div className="flex items-center gap-2 mb-3">
@@ -105,11 +106,9 @@ export default async function PartPage({ params }: PartPageProps) {
                 <span className="text-sm text-slate-500">{part.brand}</span>
               )}
             </div>
-
             <h1 className="text-xl font-bold text-slate-900 mb-4">
               {part.description}
             </h1>
-
             <div className="space-y-3 text-sm">
               <div>
                 <span className="font-medium text-slate-700">Compatibilidad:</span>
@@ -117,7 +116,7 @@ export default async function PartPage({ params }: PartPageProps) {
               </div>
               {part.category && (
                 <div>
-                  <span className="font-medium text-slate-700">Categoría:</span>
+                  <span className="font-medium text-slate-700">Categoria:</span>
                   <span className="text-slate-600 ml-2">{part.category}</span>
                 </div>
               )}
@@ -131,30 +130,21 @@ export default async function PartPage({ params }: PartPageProps) {
           </div>
         </div>
 
-        {/* Vendor card + CTA */}
         <div className="space-y-4">
-          {/* WhatsApp CTA */}
           {whatsappUrl && (
             <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5">
               <p className="text-sm font-semibold text-emerald-800 mb-1">
-                ¿Te interesa esta pieza?
+                Te interesa esta pieza?
               </p>
               <p className="text-xs text-emerald-600 mb-4">
-                Contactá directamente al vendedor por WhatsApp
+                Contacta directamente al vendedor por WhatsApp
               </p>
-              <WhatsAppButton
-                href={whatsappUrl}
-                partId={part.id}
-              />
+              <WhatsAppButton href={whatsappUrl} partId={part.id} />
             </div>
           )}
-
-          {/* Vendor info */}
           {vendor && (
             <div className="bg-white rounded-xl border border-slate-200 p-5">
-              <h3 className="font-semibold text-slate-900 mb-3">
-                {vendor.company_name}
-              </h3>
+              <h3 className="font-semibold text-slate-900 mb-3">{vendor.company_name}</h3>
               {vendor.description && (
                 <p className="text-xs text-slate-500 mb-3">{vendor.description}</p>
               )}
@@ -162,8 +152,7 @@ export default async function PartPage({ params }: PartPageProps) {
                 {vendor.city && (
                   <div className="flex items-center gap-2">
                     <MapPin size={13} />
-                    {vendor.city}
-                    {vendor.state && `, ${vendor.state}`}
+                    {vendor.city}{vendor.state && ", " + vendor.state}
                   </div>
                 )}
                 {vendor.phone && (
