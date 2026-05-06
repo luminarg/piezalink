@@ -2,10 +2,14 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, MessageCircleQuestion } from "lucide-react";
 import { CAR_BRANDS } from "@/lib/utils/car-brands";
 
-export default function PartRequestForm() {
+interface Props {
+  initialDescription?: string;
+}
+
+export default function PartRequestForm({ initialDescription = "" }: Props) {
   const [form, setForm] = useState({
     buyer_name: "",
     buyer_email: "",
@@ -15,7 +19,7 @@ export default function PartRequestForm() {
     year: "",
     chassis: "",
     part_number: "",
-    description: "",
+    description: initialDescription,
   });
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -44,7 +48,7 @@ export default function PartRequestForm() {
     });
 
     if (error) {
-      setError("Error al enviar la solicitud. Intentá nuevamente.");
+      setError("Error al enviar la solicitud. Intenta nuevamente.");
       setLoading(false);
       return;
     }
@@ -56,22 +60,25 @@ export default function PartRequestForm() {
   if (sent) {
     return (
       <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-10 text-center">
-        <CheckCircle size={40} className="mx-auto text-emerald-500 mb-4" />
-        <h2 className="text-xl font-bold text-emerald-800 mb-2">¡Solicitud publicada!</h2>
-        <p className="text-emerald-700 text-sm">
-          Los vendedores especializados en <strong>{form.brand}</strong> van a ver tu solicitud y te contactarán al{" "}
+        <CheckCircle size={44} className="mx-auto text-emerald-500 mb-4" />
+        <h2 className="text-xl font-bold text-emerald-800 mb-2">Solicitud publicada!</h2>
+        <p className="text-emerald-700 text-sm leading-relaxed">
+          Los vendedores especializados en <strong>{form.brand}</strong> van a ver tu solicitud y te contactaran al{" "}
           <strong>{form.buyer_phone}</strong> o <strong>{form.buyer_email}</strong>.
         </p>
+        <p className="text-xs text-emerald-600 mt-4">Generalmente recibis respuesta en menos de 1 hora en horario comercial.</p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
-      {/* Datos del vehículo */}
+    <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
+
+      {/* Datos del vehiculo */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">
-          Datos del vehículo
+        <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-2">
+          <span className="w-5 h-5 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center font-bold">1</span>
+          Datos del vehiculo
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
@@ -82,7 +89,7 @@ export default function PartRequestForm() {
               onChange={(e) => set("brand", e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-slate-900"
             >
-              <option value="">Seleccioná la marca</option>
+              <option value="">Selecciona la marca</option>
               {CAR_BRANDS.map((b) => (
                 <option key={b} value={b}>{b}</option>
               ))}
@@ -113,7 +120,7 @@ export default function PartRequestForm() {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              N° de chasis <span className="text-slate-400 font-normal">(opcional)</span>
+              N de chasis <span className="text-slate-400 font-normal">(opcional)</span>
             </label>
             <input
               value={form.chassis}
@@ -127,13 +134,14 @@ export default function PartRequestForm() {
 
       {/* Pieza */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">
-          Pieza que buscás
+        <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-2">
+          <span className="w-5 h-5 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center font-bold">2</span>
+          Pieza que buscas
         </h2>
         <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Nro. de parte <span className="text-slate-400 font-normal">(si lo sabés)</span>
+              Nro. de parte <span className="text-slate-400 font-normal">(si lo sabes)</span>
             </label>
             <input
               value={form.part_number}
@@ -143,13 +151,13 @@ export default function PartRequestForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Descripción de la pieza *</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Descripcion de la pieza *</label>
             <textarea
               required
               rows={3}
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
-              placeholder="Ej: Filtro de aceite original, bomba de agua, tensor de distribución..."
+              placeholder="Ej: Filtro de aceite original, bomba de agua, tensor de distribucion..."
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 resize-none"
             />
           </div>
@@ -158,7 +166,8 @@ export default function PartRequestForm() {
 
       {/* Contacto */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">
+        <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-3 flex items-center gap-2">
+          <span className="w-5 h-5 bg-blue-600 text-white rounded-full text-xs flex items-center justify-center font-bold">3</span>
           Tus datos de contacto
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -173,7 +182,7 @@ export default function PartRequestForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">WhatsApp / Teléfono *</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">WhatsApp / Telefono *</label>
             <input
               required
               value={form.buyer_phone}
@@ -196,13 +205,16 @@ export default function PartRequestForm() {
         </div>
       </div>
 
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && (
+        <p className="text-red-500 text-sm bg-red-50 border border-red-200 rounded-xl px-4 py-3">{error}</p>
+      )}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-colors"
+        className="w-full inline-flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl transition-colors text-base"
       >
+        <MessageCircleQuestion size={18} />
         {loading ? "Publicando solicitud..." : "Publicar solicitud — es gratis"}
       </button>
 

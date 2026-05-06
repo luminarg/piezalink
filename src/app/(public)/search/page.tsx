@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { Search, Sparkles } from "lucide-react";
+import { Search, Sparkles, MessageCircleQuestion } from "lucide-react";
+import Link from "next/link";
 import PartCard from "@/components/parts/PartCard";
 import { parseSearchQuery } from "@/lib/gemini";
 import type { Part } from "@/types";
@@ -20,13 +21,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   let parts: Part[] = [];
   let count = 0;
   let aiParsed: Awaited<ReturnType<typeof parseSearchQuery>> | null = null;
-  let aiEnhanced = false;
 
   if (query) {
-    // Parsear la búsqueda con IA
     aiParsed = await parseSearchQuery(query);
 
-    // Vendedores activos con suscripción vigente
     const now = new Date().toISOString();
     const { data: activeVendorIds } = await supabase
       .from("subscriptions")
@@ -36,7 +34,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
     let vendorIds = (activeVendorIds ?? []).map((s) => s.vendor_id);
 
-    // Fallback: si no hay suscripciones activas, mostrar todos los vendedores activos
     if (vendorIds.length === 0) {
       const { data: allActiveVendors } = await supabase
         .from("vendors")
@@ -46,14 +43,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     }
 
     if (vendorIds.length > 0) {
-      // Construir filtros enriquecidos con IA
       const allKeywords = [
         query,
         ...(aiParsed?.keywords ?? []),
         aiParsed?.part_type,
       ].filter(Boolean) as string[];
 
-      // Buscar con términos originales + keywords IA
       const orFilters = allKeywords
         .flatMap((kw) => [
           `part_number.ilike.%${kw}%`,
@@ -72,9 +67,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         .order("created_at", { ascending: false })
         .range(offset, offset + perPage - 1);
 
-      // Si IA detectó marca, filtrar también por brand
       if (aiParsed?.brand) {
-        aiEnhanced = true;
         const { data: brandData, count: brandCount } = await supabase
           .from("parts")
           .select("*, vendor:vendors(id, company_name, whatsapp, city)", { count: "exact" })
@@ -89,7 +82,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           parts = (brandData as Part[]) || [];
           count = brandCount || 0;
         } else {
-          // Fallback a búsqueda general
           const { data, count: total } = await dbQuery;
           parts = (data as Part[]) || [];
           count = total || 0;
@@ -115,7 +107,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             type="text"
             name="q"
             defaultValue={query}
-            placeholder="Número de pieza, marca, modelo, descripción..."
+            placeholder="Numero de pieza, marca, modelo, descripcion..."
             className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900"
           />
         </div>
@@ -132,10 +124,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <div className="flex items-center gap-2 mb-4 text-sm text-purple-700 bg-purple-50 border border-purple-200 rounded-xl px-4 py-2.5 max-w-2xl">
           <Sparkles size={14} className="shrink-0" />
           <span>
-            Búsqueda inteligente:{" "}
+            Busqueda inteligente:{" "}
             {[aiParsed.brand, aiParsed.model, aiParsed.year, aiParsed.part_type]
               .filter(Boolean)
-              .join(" · ")}
+              .join(" - ")}
           </span>
         </div>
       )}
@@ -149,71 +141,106 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
       )}
 
-      {/* Empty states */}
+      {/* Empty state sin query */}
       {!query && (
-        <div className="text-center py-20 text-slate-400">
-          <Search size={40} className="mx-auto mb-3 opacity-30" />
-          <p className="font-medium text-slate-600 mb-1">Buscá cualquier repuesto</p>
-          <p className="text-sm">Podés escribir el número de pieza, la descripción o el vehículo</p>
-          <p className="text-xs mt-2 text-purple-500 flex items-center justify-center gap-1">
-            <Sparkles size={11} /> Búsqueda con inteligencia artificial
-          </p>
-        </div>
-      )}
-
-      {query && parts.length === 0 && (
         <div className="text-center py-16 text-slate-400">
-          <PackageIcon size={40} className="mx-auto mb-3 opacity-30" />
-          <p className="font-medium text-slate-600 mb-1">Sin resultados</p>
-          <p className="text-sm mb-4">No encontramos piezas para "{query}"</p>
-          <a
-            href="/busco-pieza"
-            className="inline-block bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
-          >
-            Publicar solicitud de búsqueda →
-          </a>
+          <Search size={40} className="mx-auto mb-3 opacity-30" />
+          <p className="font-medium text-slate-600 mb-1">Busca cualquier repuesto</p>
+          <p className="text-sm mb-6">Podes escribir el numero de pieza, la descripcion o el vehiculo</p>
+          <p className="text-xs text-purple-500 flex items-center justify-center gap-1 mb-8">
+            <Sparkles size={11} /> Busqueda con inteligencia artificial
+          </p>
+
+          {/* CTA busco pieza desde empty */}
+          <div className="max-w-sm mx-auto bg-orange-50 border border-orange-200 rounded-2xl p-6">
+            <MessageCircleQuestion size={28} className="text-orange-500 mx-auto mb-3" />
+            <p className="font-semibold text-slate-800 mb-1">No encontras lo que buscas?</p>
+            <p className="text-sm text-slate-500 mb-4">
+              Publica tu solicitud y los vendedores especializados te contactan.
+            </p>
+            <Link
+              href="/busco-pieza"
+              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors"
+            >
+              <MessageCircleQuestion size={15} />
+              Publicar mi busqueda
+            </Link>
+          </div>
         </div>
       )}
 
+      {/* Empty state con query — sin resultados */}
+      {query && parts.length === 0 && (
+        <div className="max-w-md mx-auto text-center py-12">
+          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-8">
+            <MessageCircleQuestion size={40} className="text-orange-500 mx-auto mb-4" />
+            <h2 className="text-lg font-bold text-slate-900 mb-2">
+              No encontramos "{query}"
+            </h2>
+            <p className="text-slate-500 text-sm mb-6">
+              Pero podes publicar tu solicitud y los vendedores especializados te contactan directamente por WhatsApp.
+            </p>
+            <Link
+              href={"/busco-pieza?q=" + encodeURIComponent(query)}
+              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-xl transition-colors"
+            >
+              <MessageCircleQuestion size={17} />
+              Publicar solicitud de busqueda
+            </Link>
+            <p className="text-xs text-slate-400 mt-4">Gratis para compradores. Sin registro.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Grid de resultados */}
       {parts.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {parts.map((part) => (
-            <PartCard key={part.id} part={part} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {parts.map((part) => (
+              <PartCard key={part.id} part={part} />
+            ))}
+          </div>
+
+          {/* Banner "No encontraste lo que buscabas" al final */}
+          <div className="mt-10 bg-orange-50 border border-orange-200 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div>
+              <p className="font-semibold text-slate-800 mb-1">No encontraste exactamente lo que buscabas?</p>
+              <p className="text-sm text-slate-500">
+                Publica tu solicitud y los vendedores te contactan con lo que tienen disponible.
+              </p>
+            </div>
+            <Link
+              href={"/busco-pieza?q=" + encodeURIComponent(query)}
+              className="shrink-0 inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors whitespace-nowrap"
+            >
+              <MessageCircleQuestion size={15} />
+              Publicar busqueda
+            </Link>
+          </div>
+        </>
       )}
 
-      {/* Paginación */}
+      {/* Paginacion */}
       {count > perPage && (
         <div className="flex justify-center gap-2 mt-8">
           {page > 1 && (
             <a
-              href={`/search?q=${encodeURIComponent(query)}&page=${page - 1}`}
+              href={"/search?q=" + encodeURIComponent(query) + "&page=" + (page - 1)}
               className="px-4 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
             >
-              ← Anterior
+              Anterior
             </a>
           )}
           {offset + perPage < count && (
             <a
-              href={`/search?q=${encodeURIComponent(query)}&page=${page + 1}`}
+              href={"/search?q=" + encodeURIComponent(query) + "&page=" + (page + 1)}
               className="px-4 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
             >
-              Siguiente →
+              Siguiente
             </a>
           )}
         </div>
       )}
     </div>
-  );
-}
-
-function PackageIcon({ size, className }: { size: number; className?: string }) {
-  return (
-    <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
-      <path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
-      <polyline points="3.29 7 12 12 20.71 7" />
-      <line x1="12" y1="22" x2="12" y2="12" />
-    </svg>
   );
 }

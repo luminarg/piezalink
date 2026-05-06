@@ -10,7 +10,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <footer className="border-t border-slate-200 bg-white mt-16">
         <div className="max-w-7xl mx-auto px-4 py-10">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            {/* Marca */}
             <div className="text-center sm:text-left">
               <p className="font-bold text-slate-800">
                 Pieza<span className="text-blue-600">Link</span>
@@ -20,7 +19,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               </p>
             </div>
 
-            {/* Links */}
             <div className="flex items-center gap-6 text-sm text-slate-500">
               <Link href="/search" className="hover:text-slate-800 transition-colors">
                 Buscar piezas
@@ -36,7 +34,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               </Link>
             </div>
 
-            {/* Redes */}
             <div className="flex items-center gap-3">
               <a
                 href="https://instagram.com/piezalink"
@@ -52,7 +49,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           </div>
 
           <div className="border-t border-slate-100 mt-8 pt-6 text-center text-xs text-slate-400">
-            © {new Date().getFullYear()} PiezaLink — Todos los derechos reservados
+            &copy; {new Date().getFullYear()} PiezaLink &mdash; Todos los derechos reservados
           </div>
         </div>
       </footer>
