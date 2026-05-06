@@ -4,7 +4,7 @@ import "./globals.css";
 import AuthListener from "@/components/auth/AuthListener";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://piezalink.com";
-const ADSENSE_ID = process.env.NEXT_PUBLIC_ADSENSE_ID;
+const ADSENSE_ID = "ca-pub-8949950313585753";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     template: "%s | PiezaLink",
   },
   description:
-    "Encontrá repuestos automotrices originales y genuinos en Argentina. Conectamos compradores con vendedores especializados. Buscá por número de pieza, marca o modelo.",
+    "Encontra repuestos automotrices originales y genuinos en Argentina. Conectamos compradores con vendedores especializados. Busca por numero de pieza, marca o modelo.",
   keywords: [
     "repuestos automotrices Argentina",
     "autopartes",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     siteName: "PiezaLink",
     title: "PiezaLink — Marketplace de Repuestos Automotrices en Argentina",
     description:
-      "Encontrá repuestos automotrices originales y genuinos. Conectamos compradores con vendedores en toda Argentina.",
+      "Encontra repuestos automotrices originales y genuinos. Conectamos compradores con vendedores en toda Argentina.",
     url: BASE_URL,
     images: [
       {
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "PiezaLink — Marketplace de Repuestos Automotrices",
-    description: "Encontrá repuestos automotrices en Argentina. Contacto directo con vendedores por WhatsApp.",
+    description: "Encontra repuestos automotrices en Argentina. Contacto directo con vendedores por WhatsApp.",
     images: [`${BASE_URL}/og-image.png`],
   },
   robots: {
@@ -76,24 +76,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es-AR">
       <head>
-        {/* Google AdSense */}
-        {ADSENSE_ID && (
-          <meta name="google-adsense-account" content={ADSENSE_ID} />
-        )}
+        {/* Google AdSense — verificacion de cuenta */}
+        <meta name="google-adsense-account" content={ADSENSE_ID} />
       </head>
       <body className="min-h-screen bg-slate-50">
         <AuthListener />
         {children}
 
-        {/* Google AdSense script */}
-        {ADSENSE_ID && (
-          <Script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_ID}`}
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
-        )}
+        {/* Google AdSense script — carga en todas las paginas */}
+        <Script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_ID}`}
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
